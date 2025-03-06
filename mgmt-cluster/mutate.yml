@@ -104,8 +104,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: tmc-controller
-  namespace: metacontroller
+  name: autoscale-webhook
+  namespace: autoscale-webhook
 spec:
   selector:
     app: tmc-controller
