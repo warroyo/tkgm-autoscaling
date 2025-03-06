@@ -1,0 +1,137 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: autoscale-webhook
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ssl-autoscale-webhook
+  namespace: autoscale-webhook
+data:
+  server.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIID8zCCAtugAwIBAgIUVQiVMHi36piY9atdL/x6pgpSCwAwDQYJKoZIhvcNAQEL
+    BQAwbjELMAkGA1UEBhMCVVMxETAPBgNVBAgMCENvbG9yYWRvMRowGAYDVQQKDBFh
+    dXRvc2NhbGUtd2ViaG9vazEwMC4GA1UEAwwnYXV0b3NjYWxlLXdlYmhvb2suYXV0
+    b3NjYWxlLXdlYmhvb2suc3ZjMB4XDTI1MDMwNjE3MzYzNVoXDTI2MDMwNjE3MzYz
+    NVowbjELMAkGA1UEBhMCVVMxETAPBgNVBAgMCENvbG9yYWRvMRowGAYDVQQKDBFh
+    dXRvc2NhbGUtd2ViaG9vazEwMC4GA1UEAwwnYXV0b3NjYWxlLXdlYmhvb2suYXV0
+    b3NjYWxlLXdlYmhvb2suc3ZjMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKC
+    AQEAuvYnhkeNPu3lEKulc5N9Wl/qAlAVqhWSszH0LM2aqgGsb055iZ5TM7YW3Nfq
+    ZM+zUBm8ERuqU9b76g0AKG3IRvYoL4u0wZEyHZvMopXnxrp6sopl+r0ImI/8ib0f
+    /3hNXnfPKj/GRyk1Q+FQ5P2TvD4gKJEygV0fyq4kuux3Vu59TzOxUb36pL7/yTEH
+    Kv2hRtFth57kbgvKlzvaqFHxGf7SPfrn6OVXMns1pD0d9yRb7ZTGTkOefSOOc9yG
+    ypb3Vp4r8EsR1Civd9YIewBHJibB/BOw0kgtedJwSHWMXKPYHJKCFK85J1uxBEtF
+    Uqgp7+XF4pIwEgREoFcebeaulQIDAQABo4GIMIGFMB0GA1UdDgQWBBRShZUjy4HU
+    Gj/8EmpbjravghiUaTAfBgNVHSMEGDAWgBRShZUjy4HUGj/8EmpbjravghiUaTAP
+    BgNVHRMBAf8EBTADAQH/MDIGA1UdEQQrMCmCJ2F1dG9zY2FsZS13ZWJob29rLmF1
+    dG9zY2FsZS13ZWJob29rLnN2YzANBgkqhkiG9w0BAQsFAAOCAQEAGMcuIGhsPjTj
+    jgruwi1Y8ogsBiF8AbHdSt30iIFztDyAdRVSGlpfc61/VYdm+Q2quYqXFGJ5JIHg
+    cXvA8WDp5fFb165QNdl4xlJCPmD+QhsHJIljXhZXWnLZ2pCP+UlkpgmWaRKFGFJo
+    Cu/UCda8F3hDiNhskSFsAv6r80ziIbamM3MoUt3Eb3MZsAYqSJmaxS1zqJTavvkj
+    MBHIq6ElkzkdQa6ndBb9eAHbAz3eW5eXFKZ6FFqyVBrWE9wUEYWhfdqd5415pZKT
+    EJVW12TL+kZ0hibWPp5F/PvcGc/NM5JpxasRa8VLqwDs7zeVWTSyUq4Am3n3Jkhy
+    JpG+Lkua+A==
+    -----END CERTIFICATE-----
+
+  server.key: |
+    -----BEGIN PRIVATE KEY-----
+    MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC69ieGR40+7eUQ
+    q6Vzk31aX+oCUBWqFZKzMfQszZqqAaxvTnmJnlMzthbc1+pkz7NQGbwRG6pT1vvq
+    DQAobchG9igvi7TBkTIdm8yilefGunqyimX6vQiYj/yJvR//eE1ed88qP8ZHKTVD
+    4VDk/ZO8PiAokTKBXR/KriS67HdW7n1PM7FRvfqkvv/JMQcq/aFG0W2HnuRuC8qX
+    O9qoUfEZ/tI9+ufo5VcyezWkPR33JFvtlMZOQ559I45z3IbKlvdWnivwSxHUKK93
+    1gh7AEcmJsH8E7DSSC150nBIdYxco9gckoIUrzknW7EES0VSqCnv5cXikjASBESg
+    Vx5t5q6VAgMBAAECggEABInrRbhA9pEh6XixSJABEAuaC7pT/FAPwqfozJmlMpFd
+    1Unra2rbjDrUbUIUn6PnL3+gcC3iwaxLa1Are8/Gd+qL6TOUDMrwk4Vvv1ayTMHE
+    LsdrWF30cne0Ysejmjkab7uq3NS1hI68i0xSAW0ihARiFXoI5tkS54G4xIzvDL4s
+    zQzTdfVMLLDQwxZMXRRH90k0STaxpqxDLbC1lVeD7XKdNp/AQMdCkoL5TD1eglqp
+    /A4gTZdtH7ytBz5sn0d0031+LKMAd32QeSwm7hc3moXQkAZZJARTqgMWi14afFai
+    Wya6Dh1RFVsWm8kzGHmKN9fa/8uZ7167LKQj1HFE4QKBgQDSCdOM5YRpB22yJb2x
+    EsKQpjQN//5bdGZBAVeT3QximnjlESEWrxlfTuRUbvZttwsbIywOnx6aYpWBIEJg
+    JRQncgvOKMDNd1fnhtyJViSwLEDH0s3XXNm9RvgEptj26gyuQ/HHybctGyZ1p3Q+
+    HsTJnN5I9mfISdYDA/DrQZ+1eQKBgQDj35UopBkLa+vcN1AGi/qI5KZz5cKB/0rP
+    ljtIO+Ou2JPRn0KWFqMKwGyXo98bIsk6j3/9uSoMxC5Z7ii8A6C5Nr4vvV/urozi
+    iHJR4/1EonWm1pT89cIpBilV1fZkdhxxKWOM8XIkZaS+rnMgCNMDa6LJaJwMO0gT
+    DKkPhOuG/QKBgQCZvCmE6oXFXnOTPn6eui2BNLXLPYGOrR8fG31ftB8ZmRk+CRCg
+    Ct/WW+dSSbnDyoOthEv+E8eRlvD5B4St3NXonVg4uKmOenjz9Uk8mLnX3Tw5Rnn1
+    1XdmTCjDNuB9sghAEWlKI8IYmNPIsB2sTlcZfuFQpFKITksAAAV6HJlqeQKBgQCb
+    WmrOclHAv6rlT7B3Ridf/MKecR3SksHmFH4GGQ54vZ7JYtJ6kKRHSDjAiTApx+V4
+    zyxrRjmsynLvTLbot3Bz1SaEVY95ofba2jtWKSEaEcg0Hkckzke4wEKeCmkYxI1P
+    ePAtvs4aklFmzngeduWlh1RMC82XaTMSCaeYtP394QKBgDH9OC9tdqadx4CvPBBx
+    hr6rzcMCkgg8AWdaWa+P5IogTlhmLse4UNkO7fX6oXS5tg2QTzg4MEhaNkiog31C
+    7ozVMZSHGmp/9eCp0Fk5sig4ostbO3n2AWPv9NOdZFosPTAOGokWIGF2zsnFFKAU
+    7AqjjnalRdKQPykm5xohHYOT
+    -----END PRIVATE KEY-----
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autoscale-webhook
+  namespace: autoscale-webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autoscale-webhook
+  template:
+    metadata:
+      labels:
+        app: autoscale-webhook
+    spec:
+      containers:
+      - name: controller
+        image: python:3.9
+        command: ["/bin/sh","-c"]
+        args: ["pip install flask; python /hooks/mutate.py"]
+        ports:
+        - name: http
+          containerPort: 8443
+        volumeMounts:
+        - name: hooks
+          mountPath: /hooks
+        - name: ssl-autoscale-webhook
+          mountPath: /ssl
+      volumes:
+      - name: hooks
+        configMap:
+          name: autoscale-controller
+      - name: ssl-autoscale-webhook
+        configMap:
+          name: ssl-autoscale-webhook
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tmc-controller
+  namespace: metacontroller
+spec:
+  selector:
+    app: tmc-controller
+  ports:
+  - port: 443
+    targetPort: 8443
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: autoscale-webhook
+webhooks:
+  - name: autoscale-webhook.autoscale-webhook.svc
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        name: autoscale-webhook
+        namespace: autoscale-webhook
+        path: "/mutate"
+      caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUQ4ekNDQXR1Z0F3SUJBZ0lVVlFpVk1IaTM2cGlZOWF0ZEwveDZwZ3BTQ3dBd0RRWUpLb1pJaHZjTkFRRUwKQlFBd2JqRUxNQWtHQTFVRUJoTUNWVk14RVRBUEJnTlZCQWdNQ0VOdmJHOXlZV1J2TVJvd0dBWURWUVFLREJGaApkWFJ2YzJOaGJHVXRkMlZpYUc5dmF6RXdNQzRHQTFVRUF3d25ZWFYwYjNOallXeGxMWGRsWW1odmIyc3VZWFYwCmIzTmpZV3hsTFhkbFltaHZiMnN1YzNaak1CNFhEVEkxTURNd05qRTNNell6TlZvWERUSTJNRE13TmpFM016WXoKTlZvd2JqRUxNQWtHQTFVRUJoTUNWVk14RVRBUEJnTlZCQWdNQ0VOdmJHOXlZV1J2TVJvd0dBWURWUVFLREJGaApkWFJ2YzJOaGJHVXRkMlZpYUc5dmF6RXdNQzRHQTFVRUF3d25ZWFYwYjNOallXeGxMWGRsWW1odmIyc3VZWFYwCmIzTmpZV3hsTFhkbFltaHZiMnN1YzNaak1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0MKQVFFQXV2WW5oa2VOUHUzbEVLdWxjNU45V2wvcUFsQVZxaFdTc3pIMExNMmFxZ0dzYjA1NWlaNVRNN1lXM05mcQpaTSt6VUJtOEVSdXFVOWI3NmcwQUtHM0lSdllvTDR1MHdaRXlIWnZNb3BYbnhycDZzb3BsK3IwSW1JLzhpYjBmCi8zaE5YbmZQS2ovR1J5azFRK0ZRNVAyVHZENGdLSkV5Z1YwZnlxNGt1dXgzVnU1OVR6T3hVYjM2cEw3L3lURUgKS3YyaFJ0RnRoNTdrYmd2S2x6dmFxRkh4R2Y3U1Bmcm42T1ZYTW5zMXBEMGQ5eVJiN1pUR1RrT2VmU09PYzl5Rwp5cGIzVnA0cjhFc1IxQ2l2ZDlZSWV3QkhKaWJCL0JPdzBrZ3RlZEp3U0hXTVhLUFlISktDRks4NUoxdXhCRXRGClVxZ3A3K1hGNHBJd0VnUkVvRmNlYmVhdWxRSURBUUFCbzRHSU1JR0ZNQjBHQTFVZERnUVdCQlJTaFpVank0SFUKR2ovOEVtcGJqcmF2Z2hpVWFUQWZCZ05WSFNNRUdEQVdnQlJTaFpVank0SFVHai84RW1wYmpyYXZnaGlVYVRBUApCZ05WSFJNQkFmOEVCVEFEQVFIL01ESUdBMVVkRVFRck1DbUNKMkYxZEc5elkyRnNaUzEzWldKb2IyOXJMbUYxCmRHOXpZMkZzWlMxM1pXSm9iMjlyTG5OMll6QU5CZ2txaGtpRzl3MEJBUXNGQUFPQ0FRRUFHTWN1SUdoc1BqVGoKamdydXdpMVk4b2dzQmlGOEFiSGRTdDMwaUlGenREeUFkUlZTR2xwZmM2MS9WWWRtK1EycXVZcVhGR0o1SklIZwpjWHZBOFdEcDVmRmIxNjVRTmRsNHhsSkNQbUQrUWhzSEpJbGpYaFpYV25MWjJwQ1ArVWxrcGdtV2FSS0ZHRkpvCkN1L1VDZGE4RjNoRGlOaHNrU0ZzQXY2cjgwemlJYmFtTTNNb1V0M0ViM01ac0FZcVNKbWF4UzF6cUpUYXZ2a2oKTUJISXE2RWxremtkUWE2bmRCYjllQUhiQXozZVc1ZVhGS1o2RkZxeVZCcldFOXdVRVlXaGZkcWQ1NDE1cFpLVApFSlZXMTJUTCtrWjBoaWJXUHA1Ri9QdmNHYy9OTTVKcHhhc1JhOFZMcXdEczd6ZVZXVFN5VXE0QW0zbjNKa2h5CkpwRytMa3VhK0E9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=="
+    rules:
+      - operations: [ "CREATE","UPDATE" ]
+        apiGroups: ["cluster.x-k8s.io"]
+        apiVersions: ["v1beta1"]
+        resources: ["cluster"]
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
+    timeoutSeconds: 5
