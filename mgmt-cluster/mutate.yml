@@ -82,7 +82,7 @@ spec:
     spec:
       containers:
       - name: controller
-        image: python:3.9
+        image: dockerhub.packages.vcfd.broadcom.net/python:3.9
         command: ["/bin/sh","-c"]
         args: ["pip install flask; python /hooks/mutate.py"]
         ports:
@@ -108,7 +108,7 @@ metadata:
   namespace: autoscale-webhook
 spec:
   selector:
-    app: tmc-controller
+    app: autoscale-webhook
   ports:
   - port: 443
     targetPort: 8443
@@ -120,6 +120,11 @@ metadata:
   name: autoscale-webhook
 webhooks:
   - name: autoscale-webhook.autoscale-webhook.svc
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: ["tkg-system"]
     failurePolicy: Fail
     clientConfig:
       service:
@@ -131,7 +136,7 @@ webhooks:
       - operations: [ "CREATE","UPDATE" ]
         apiGroups: ["cluster.x-k8s.io"]
         apiVersions: ["v1beta1"]
-        resources: ["cluster"]
+        resources: ["clusters"]
     admissionReviewVersions: ["v1", "v1beta1"]
     sideEffects: None
     timeoutSeconds: 5
