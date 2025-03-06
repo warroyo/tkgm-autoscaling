@@ -16,19 +16,20 @@ def webhook():
 
     cluster = request_json['request']['object']
     cluster_name = cluster['metadata']['name']
+    if  "machineDeployments" not in cluster['spec']['topology']['workers']:
+         return jsonify({"response": {"allowed": True}}), 200
     patch = []
-    if "machineDeployments" in cluster['spec']['topology']['workers']:
-        app.logger.info(f"checking to see if cluster {cluster_name} needs mutating")
-        mds = cluster['spec']['topology']['workers']['machineDeployments']
-        for index, pool in enumerate(mds):
-            if "labels" in pool['metadata']:
-                if "cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size" in pool['metadata']['labels'] and "cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size" in pool['metadata']['labels']:
-                    app.logger.info(f"autoscale labels found on {cluster_name}, needs mutating")
-                    patch.extend([
-                        {"op": "add", "path": f"/spec/topology/workers/machineDeployments/{index}/metadata/annotations/cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size", "value": pool['metadata']['labels']['cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size']},
-                        {"op": "add", "path": f"/spec/topology/workers/machineDeployments/{index}/metadata/annotations/cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size", "value": pool['metadata']['labels']['cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size']},
-                        {"op": "remove", "path": f"/spec/topology/workers/machineDeployments/{index}/replicas"}
-                        ])
+    app.logger.info(f"checking to see if cluster {cluster_name} needs mutating")
+    mds = cluster['spec']['topology']['workers']['machineDeployments']
+    for index, pool in enumerate(mds):
+        if "labels" in pool['metadata']:
+            if "cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size" in pool['metadata']['labels'] and "cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size" in pool['metadata']['labels']:
+                app.logger.info(f"autoscale labels found on {cluster_name}, needs mutating")
+                patch.extend([
+                    {"op": "add", "path": f"/spec/topology/workers/machineDeployments/{index}/metadata/annotations/cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size", "value": pool['metadata']['labels']['cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size']},
+                    {"op": "add", "path": f"/spec/topology/workers/machineDeployments/{index}/metadata/annotations/cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size", "value": pool['metadata']['labels']['cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size']},
+                    {"op": "remove", "path": f"/spec/topology/workers/machineDeployments/{index}/replicas"}
+                    ])
             
     return jsonify({
         "response": {
