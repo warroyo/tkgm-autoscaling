@@ -36,14 +36,23 @@ def webhook():
     mds = cluster['spec']['topology']['workers']['machineDeployments']
     for index, pool in enumerate(mds):
         app.logger.debug(f"machine deployment: {pool}")
-        if "labels" in pool['metadata'] and min not in pool['metadata']['annotations'] and max not in pool['metadata']['annotations']:
+        if "labels" in pool['metadata']:
             if max in pool['metadata']['labels'] and min in pool['metadata']['labels']:
                 app.logger.info(f"autoscale labels found on {cluster_name}, needs mutating")
-                patch.extend([
-                    {"op": "add", "path": f"/spec/topology/workers/machineDeployments/{index}/metadata/annotations/cluster.x-k8s.io~1cluster-api-autoscaler-node-group-max-size", "value": pool['metadata']['labels']['cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size']},
-                    {"op": "add", "path": f"/spec/topology/workers/machineDeployments/{index}/metadata/annotations/cluster.x-k8s.io~1cluster-api-autoscaler-node-group-min-size", "value": pool['metadata']['labels']['cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size']},
-                    {"op": "remove", "path": f"/spec/topology/workers/machineDeployments/{index}/replicas"}
+                app.logger.info("checking to see if upddating of annotations is needed")
+                if max in pool['metadata']['annotations'] and min in pool['metadata']['annotations']:
+                    app.logger.info("annotations exist, updating")
+                    patch.extend([
+                    {"op": "replace", "path": f"/spec/topology/workers/machineDeployments/{index}/metadata/annotations/cluster.x-k8s.io~1cluster-api-autoscaler-node-group-max-size", "value": pool['metadata']['labels']['cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size']},
+                    {"op": "replace", "path": f"/spec/topology/workers/machineDeployments/{index}/metadata/annotations/cluster.x-k8s.io~1cluster-api-autoscaler-node-group-min-size", "value": pool['metadata']['labels']['cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size']}
                     ])
+                else:
+                    app.logger.info(f"initial mutation of cluster {cluster_name}")
+                    patch.extend([
+                        {"op": "add", "path": f"/spec/topology/workers/machineDeployments/{index}/metadata/annotations/cluster.x-k8s.io~1cluster-api-autoscaler-node-group-max-size", "value": pool['metadata']['labels']['cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size']},
+                        {"op": "add", "path": f"/spec/topology/workers/machineDeployments/{index}/metadata/annotations/cluster.x-k8s.io~1cluster-api-autoscaler-node-group-min-size", "value": pool['metadata']['labels']['cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size']},
+                        {"op": "remove", "path": f"/spec/topology/workers/machineDeployments/{index}/replicas"}
+                        ])
     app.logger.debug(patch)
     json_patch = jsonpatch.JsonPatch(patch)
     base64_patch = base64.b64encode(json_patch.to_string().encode("utf-8")).decode("utf-8")

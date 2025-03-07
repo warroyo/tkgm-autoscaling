@@ -12,11 +12,23 @@ This repo is an example of using cluster autscaler with TKGm when also using git
 
 ## Setup
 
-1. create a service account on the management cluster and get a kubeconfig for it.  
+## Management Cluster
+
+Due to some limitations fo how TMC and TKGm work together there are some things we need to install in the mgmt cluster.
+
+* RBAC for the service account to do autoscaling
+* a mutating webhook to add the autoscaling annotations based off of labels and removal of the replicas field. This is due to the limitation of setting the annotations directly in TMC.
+
+1. deploy the service account and mutating webhook
     * Connect to your management cluster kube context
-    * `kubectl apply -f mgmt-cluster rbac.yml` - this creates the SA and the token
+    * `kubectl apply -k mgmt-cluster/` 
+    
+    
+1. get the kubeconfig from the service account to be used in future steps.
     * `mgmt-cluster/generate-kubeconfig.sh` - this generates a kubeconfig and writes it to a file
 
+
+## TMC
 
 1. enable the CD(flux) capabilties of TMC on a cluster group and use this repo as the bootstrap repo. This example uses a common pattern of having a single cluster group bootstrap repo that dynamically determines the cluster name. You can read more about this pattern [here](https://github.com/warroyo/flux-tmc-multitenant/tree/main?tab=readme-ov-file#clustergroup-bootstrapping).
  
