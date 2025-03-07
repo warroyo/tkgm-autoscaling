@@ -44,7 +44,7 @@ Due to some limitations fo how TMC and TKGm work together there are some things 
    ![alt text](images/image3.png)
 
 
-1. Create a cluster and add the following annotations to the nodepool annotations section.
+1. Create a cluster and add the following labels to the nodepool labels section.
 
    ```
    cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "5"
