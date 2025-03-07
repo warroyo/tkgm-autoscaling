@@ -3,6 +3,8 @@
 from flask import Flask, request, jsonify
 import json
 import logging
+import jsonpatch
+import base64
 
 app = Flask(__name__)
 app.logger.setLevel(logging.DEBUG)
@@ -48,6 +50,9 @@ def webhook():
                     {"op": "add", "path": f"/spec/topology/workers/machineDeployments/{index}/metadata/annotations/cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size", "value": pool['metadata']['labels']['cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size']},
                     {"op": "remove", "path": f"/spec/topology/workers/machineDeployments/{index}/replicas"}
                     ])
+    app.logger.debug(patch)
+    json_patch = jsonpatch.JsonPatch(patch)
+    base64_patch = base64.b64encode(json_patch.to_string().encode("utf-8")).decode("utf-8")
     return jsonify(
         {
             "apiVersion": request_json.get("apiVersion"),
@@ -57,7 +62,7 @@ def webhook():
                 "allowed": True,
                 "status": {"message": "configuring cluster for autoscaling"},
                 "patchType": "JSONPatch",
-                "patch": json.dumps(patch).encode('utf-8').decode('utf-8')
+                "patch": base64_patch
             }
         }
     )

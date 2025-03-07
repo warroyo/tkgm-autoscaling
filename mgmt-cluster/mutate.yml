@@ -84,7 +84,7 @@ spec:
       - name: controller
         image: dockerhub.packages.vcfd.broadcom.net/python:3.9
         command: ["/bin/sh","-c"]
-        args: ["pip install flask; python /hooks/mutate.py"]
+        args: ["pip install flask,jsonpatch; python /hooks/mutate.py"]
         ports:
         - name: http
           containerPort: 8443
