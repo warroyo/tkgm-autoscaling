@@ -17,9 +17,9 @@ def webhook():
     cluster = request_json['request']['object']
     cluster_name = cluster['metadata']['name']
     if  "machineDeployments" not in cluster['spec']['topology']['workers']:
+         app.logger.info(f"request for {cluster_name} did not container machine deployments") 
          return jsonify({"response": {"allowed": True}}), 200
     patch = []
-    app.logger.info(f"checking to see if cluster {cluster_name} needs mutating")
     mds = cluster['spec']['topology']['workers']['machineDeployments']
     for index, pool in enumerate(mds):
         if "labels" in pool['metadata']:
