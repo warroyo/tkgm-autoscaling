@@ -42,6 +42,7 @@ def webhook():
     patch = []
     mds = cluster['spec']['topology']['workers']['machineDeployments']
     for index, pool in enumerate(mds):
+        app.logger.debug(f"machine deployment: {pool}")
         if "labels" in pool['metadata']:
             if "cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size" in pool['metadata']['labels'] and "cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size" in pool['metadata']['labels']:
                 app.logger.info(f"autoscale labels found on {cluster_name}, needs mutating")
