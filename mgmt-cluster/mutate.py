@@ -11,10 +11,10 @@ app.logger.setLevel(logging.DEBUG)
 
 @app.route('/mutate', methods=['POST'])
 def webhook():
+    max = "cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size"
+    min = "cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size"
     request_json = request.get_json()
-    app.logger.debug(request_json)
-    if not request_json:
-        return jsonify(
+    default_response = jsonify(
             {
                 "apiVersion": request_json.get("apiVersion"),
                 "kind": request_json.get("kind"),
@@ -24,27 +24,20 @@ def webhook():
                 }
             }
         )
-
+    app.logger.debug(request_json)
+    if not request_json:
+        return default_response
     cluster = request_json['request']['object']
     cluster_name = cluster['metadata']['name']
     if  "machineDeployments" not in cluster['spec']['topology']['workers']:
          app.logger.info(f"request for {cluster_name} did not container machine deployments") 
-         return jsonify(
-            {
-                "apiVersion": request_json.get("apiVersion"),
-                "kind": request_json.get("kind"),
-                "response": {
-                    "uid": request_json["request"].get("uid"),
-                    "allowed": True
-                }
-            }
-        )
+         return default_response
     patch = []
     mds = cluster['spec']['topology']['workers']['machineDeployments']
     for index, pool in enumerate(mds):
         app.logger.debug(f"machine deployment: {pool}")
-        if "labels" in pool['metadata']:
-            if "cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size" in pool['metadata']['labels'] and "cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size" in pool['metadata']['labels']:
+        if "labels" in pool['metadata'] and min not in pool['metadata']['annotations'] and max not in pool['metadata']['annotations']:
+            if max in pool['metadata']['labels'] and min in pool['metadata']['labels']:
                 app.logger.info(f"autoscale labels found on {cluster_name}, needs mutating")
                 patch.extend([
                     {"op": "add", "path": f"/spec/topology/workers/machineDeployments/{index}/metadata/annotations/cluster.x-k8s.io~1cluster-api-autoscaler-node-group-max-size", "value": pool['metadata']['labels']['cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size']},
